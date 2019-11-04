@@ -1,0 +1,97 @@
+// ==UserScript==
+// @name         Devast.io Zoom Hack and Aimbot
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  try to take over the world!
+// @author       You
+// @include        http*://devast.io/*
+// @grant none
+// @run-at       document-start
+// ==/UserScript==
+
+(function() {
+    'use strict';
+    window.stop();
+    document.body.innerHTML="";
+    document.head.innerHTML="";
+      WebSocket.prototype._send = WebSocket.prototype.send;
+    WebSocket.prototype.send = function(data) {
+        window.wsStart=Date.now();
+        this._send(data);
+        setInterval(()=>{this._send(window.atob(""));},100000)
+        this.addEventListener('message', function wsMessage(msg) {
+           window.wslatency= Date.now()-window.wsStart;
+            this.removeEventListener('message',wsMessage);
+        })
+        this.send = function(_data) {
+            this._send(_data);
+        };
+    };
+    function disablemousemove(e){e.stopPropagation();}
+    document.addEventListener("keydown", event => {if(event.code=="KeyX"){
+                                                                          if(!window.aimlock){window.aimlock=true;}else{
+                                                                              window.aimlock=!window.aimlock;}
+                                                                          if(window.aimlock){document.getElementById("can").addEventListener("mousemove",disablemousemove);}else{
+                                                                              document.getElementById("can").removeEventListener("mousemove",disablemousemove);
+                                                                          }
+                                                                         }});
+    document.addEventListener("click",(e)=>{window.enemyTarget.shadowx=e.clientX; window.enemyTarget.shadowy=e.clientY;});
+    async function checkScript(div){
+        let scripts= div.getElementsByTagName("script");
+        for(let script of scripts){
+            let parent=script.parentNode;
+            let newScript=document.createElement("script");
+            if(script.src.includes("client")){
+                newScript= await scriptModify(script.src);
+            }else{
+                for(let attribute of script.attributes){
+                    newScript.setAttribute(attribute.name,attribute.value);
+                }
+                if(script.textContent){
+                    newScript=script;
+                }
+            }
+
+            parent.removeChild(script);
+            parent.append(newScript);
+        }
+    }
+    async function scriptModify(scriptSrc){
+        let newScript=document.createElement("script");
+        await fetch(scriptSrc).then((response)=>{return response.text();}).then((script)=>{
+            return script.replace(/Ww\[VM\[142\]\]=0;/gi,"window.test=Ww; Ww[VM[142]]=-0.5;");}).
+        then((script)=>{
+            return script.replace(/VVv=\(/,"window.acc=true;VVv=(")}).
+        then((script)=>{
+            return script.replace(/VW\[VM\[231\]\]\(\);VW\[VM\[208\]\]\(WV,nw\);VW\[VM\[145\]\]\(VN\);VW\[VM\[100\]\]\(M,MvwMn,MwmvW,vwm,vwn\);/,
+                                  ` VW.save();
+VW.font = "15px Arial";
+VW.fillText("Latency:"+window.wslatency+ "ms",0,15);
+            VW.restore();if(M instanceof Image&&M.src.includes("skin"))if(window.acc){if(window.acc=!1,window.center||(window.center={}),window.center.x=WV,window.center.y=nw,window.enemyTarget||(window.enemyTarget={x:0,y:0,minDistance:9999999999}),window.enemyTarget.shadowx&&window.enemyTarget.shadowy&&(window.enemyTarget.x=window.enemyTarget.shadowx,window.enemyTarget.y=window.enemyTarget.shadowy),window.enemyTarget.minDistance<9999999999){const e=new MouseEvent("mousemove",{view:window,bubbles:!0,cancelable:!1,button:0,clientX:window.enemyTarget.x,clientY:window.enemyTarget.y});window.aimlock&&setTimeout(()=>{document.dispatchEvent(e)},1),window.enemyTarget.minDistance=9999999999,VW.save(),VW.beginPath(),VW.moveTo(window.enemyTarget.x,window.enemyTarget.y),VW.lineTo(window.center.x,window.center.y),VW.lineWidth=5,VW.strokeStyle="#ff0000",VW.stroke(),VW.restore()}}else{var distance=Math.sqrt((window.enemyTarget.x-WV)*(window.enemyTarget.x-WV)+(window.enemyTarget.y-nw)*(window.enemyTarget.y-nw));window.enemyTarget.minDistance>distance&&(window.enemyTarget.minDistance=distance,window.enemyTarget.shadowx=WV,window.enemyTarget.shadowy=nw),VW.save(),VW.beginPath(),VW.moveTo(WV,nw),VW.lineTo(window.center.x,window.center.y),VW.strokeStyle="#008000",VW.stroke(),VW.restore()}VW[VM[231]](),VW[VM[208]](WV,nw),VW[VM[145]](VN),VW[VM[100]](M,MvwMn,MwmvW,vwm,vwn);`);
+        }).then((scriptTextContent)=>{
+            newScript.textContent=scriptTextContent;
+        });
+        return newScript;
+    }
+    let head,body;
+    fetch("https://devast.io/").then((response)=>{return response.text()}).then((text)=>{
+
+        let parser = new DOMParser();
+        let xmlDoc = parser.parseFromString(text,"text/html");
+        document.head.innerHTML=xmlDoc.getElementsByTagName("head")[0].innerHTML;
+        document.body=xmlDoc.getElementsByTagName("body")[0];
+        return document
+    }).then((doc)=>{
+        checkScript(doc);
+    });
+    window.addEventListener("", event => {if(window.test){
+        if(event.deltaY>0){
+            if(window.test.scale<1){
+                window.test.scale+=0.05;}
+        }else{
+            if(window.test.scale>-0.8){
+                window.test.scale-=0.05;}
+        }}
+                                              });
+
+})();
